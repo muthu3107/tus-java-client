@@ -11,8 +11,12 @@ import io.tus.java.client.TusURLMemoryStore;
 import io.tus.java.client.TusUpload;
 import io.tus.java.client.TusUploader;
 
+
+
 public class Main {
     public static void main(String[] args) {
+    	final int MAX_CHUNK_SIZE = 1024000000;
+    	final int MIN_CHUNK_SIZE = 512;
         try {
             // When Java's HTTP client follows a redirect for a POST request, it will change the
             // method from POST to GET which can be disabled using following system property.
@@ -25,7 +29,7 @@ public class Main {
 
             // Configure tus HTTP endpoint. This URL will be used for creating new uploads
             // using the Creation extension
-            client.setUploadCreationURL(new URL("https://tusd.tusdemo.net/files/"));
+            client.setUploadCreationURL(new URL("http://0.0.0.0:1080/files/"));
 
             // Enable resumable uploads by storing the upload URL in memory
             client.enableResuming(new TusURLMemoryStore());
@@ -57,21 +61,44 @@ public class Main {
                     // upload and get a TusUploader in return. This class is responsible for opening
                     // a connection to the remote server and doing the uploading.
                     TusUploader uploader = client.resumeOrCreateUpload(upload);
+                    
+                    int ChunkSize = 1024;
+                    int remainIng = -1;
 
                     // Upload the file in chunks of 1KB sizes.
-                    uploader.setChunkSize(1024);
+                    uploader.setChunkSize(ChunkSize);
 
                     // Upload the file as long as data is available. Once the
                     // file has been fully uploaded the method will return -1
+                    long startTime = System.currentTimeMillis();
                     do {
                         // Calculate the progress using the total size of the uploading file and
                         // the current offset.
                         long totalBytes = upload.getSize();
                         long bytesUploaded = uploader.getOffset();
                         double progress = (double) bytesUploaded / totalBytes * 100;
+                        long newCurrentTime = System.currentTimeMillis();
+                        long remTimeInSeconds = (newCurrentTime-startTime)/1000;
+                        startTime = newCurrentTime;
+                        if(remTimeInSeconds < 1 ) {
+                        	System.out.println("Achieved in less than 1 second, so increasing chunk size, time taken "+remTimeInSeconds);
+                        	if(!(ChunkSize>MAX_CHUNK_SIZE || (ChunkSize*2)>MAX_CHUNK_SIZE)) {
+                        		ChunkSize = ChunkSize*2; 
+                        	}
+                        	uploader.setChunkSize(ChunkSize);
+                        }else {
+                        	System.out.println("Reducing chunk size, time taken "+remTimeInSeconds);
+                        	if(!(ChunkSize<MIN_CHUNK_SIZE || (ChunkSize/2)<MIN_CHUNK_SIZE)){
+                        		ChunkSize = ChunkSize/2;
+                        	}
+                        	uploader.setChunkSize(ChunkSize);
+                        }
 
                         System.out.printf("Upload at %06.2f%%.\n", progress);
-                    } while(uploader.uploadChunk() > -1);
+                        //if 
+                        
+                        remainIng = uploader.uploadChunk();
+                    } while(remainIng > -1);
 
                     // Allow the HTTP connection to be closed and cleaned up
                     uploader.finish();
