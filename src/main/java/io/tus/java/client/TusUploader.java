@@ -28,6 +28,8 @@ public class TusUploader {
     private byte[] buffer;
     private int requestPayloadSize = 10 * 1024 * 1024;
     private int bytesRemainingForRequest;
+    private int minChunkSize;
+    private int maxChunkSize;
 
     private HttpURLConnection connection;
     private OutputStream output;
@@ -42,12 +44,14 @@ public class TusUploader {
      * @param offset Offset to read from
      * @throws IOException Thrown if an exception occurs while issuing the HTTP request.
      */
-    public TusUploader(TusClient client, TusUpload upload, URL uploadURL, TusInputStream input, long offset) throws IOException {
+    public TusUploader(TusClient client, TusUpload upload, URL uploadURL, TusInputStream input, long offset, int minChunkSize,int maxChunkSize) throws IOException {
         this.uploadURL = uploadURL;
         this.input = input;
         this.offset = offset;
         this.client = client;
         this.upload = upload;
+        this.minChunkSize=minChunkSize;
+        this.maxChunkSize=maxChunkSize;
 
         input.seekTo(offset);
 
@@ -321,4 +325,20 @@ public class TusUploader {
             return -1;
         }
     }
+    
+    public int getMinChunkSize() {
+		return minChunkSize;
+	}
+
+	public void setMinChunkSize(int minChunkSize) {
+		this.minChunkSize = minChunkSize;
+	}
+
+	public int getMaxChunkSize() {
+		return maxChunkSize;
+	}
+
+	public void setMaxChunkSize(int maxChunkSize) {
+		this.maxChunkSize = maxChunkSize;
+	}
 }

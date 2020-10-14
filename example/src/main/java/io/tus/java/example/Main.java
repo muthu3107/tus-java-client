@@ -15,8 +15,6 @@ import io.tus.java.client.TusUploader;
 
 public class Main {
     public static void main(String[] args) {
-    	final int MAX_CHUNK_SIZE = 1024000000;
-    	final int MIN_CHUNK_SIZE = 512;
         try {
             // When Java's HTTP client follows a redirect for a POST request, it will change the
             // method from POST to GET which can be disabled using following system property.
@@ -62,11 +60,14 @@ public class Main {
                     // a connection to the remote server and doing the uploading.
                     TusUploader uploader = client.resumeOrCreateUpload(upload);
                     
-                    int ChunkSize = 1024;
+                    int ChunkSize = uploader.getMinChunkSize();
                     int remainIng = -1;
 
                     // Upload the file in chunks of 1KB sizes.
                     uploader.setChunkSize(ChunkSize);
+                    
+                    int MAX_CHUNK_SIZE = uploader.getMaxChunkSize();
+                    int MIN_CHUNK_SIZE = uploader.getMinChunkSize();
 
                     // Upload the file as long as data is available. Once the
                     // file has been fully uploaded the method will return -1

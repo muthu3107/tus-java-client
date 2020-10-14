@@ -196,8 +196,11 @@ public class TusClient {
         if(resumingEnabled) {
             urlStore.set(upload.getFingerprint(), uploadURL);
         }
+        //Getting and Setting min and max chunksize from SERVER
+        int minChunkSize = Integer.parseInt(connection.getHeaderField("MinChunkSize"));
+        int maxChunkSize = Integer.parseInt(connection.getHeaderField("MaxChunkSize"));
 
-        return new TusUploader(this, upload, uploadURL, upload.getTusInputStream(), 0);
+        return new TusUploader(this, upload, uploadURL, upload.getTusInputStream(), 0,minChunkSize,maxChunkSize);
     }
 
     /**
@@ -264,8 +267,11 @@ public class TusClient {
             throw new ProtocolException("missing upload offset in response for resuming upload", connection);
         }
         long offset = Long.parseLong(offsetStr);
+        //Getting and Setting min and max chunksize from SERVER
+        int minChunkSize = Integer.parseInt(connection.getHeaderField("MinChunkSize"));
+        int maxChunkSize = Integer.parseInt(connection.getHeaderField("MaxChunkSize"));
 
-        return new TusUploader(this, upload, uploadURL, upload.getTusInputStream(), offset);
+        return new TusUploader(this, upload, uploadURL, upload.getTusInputStream(), offset, minChunkSize,maxChunkSize);
     }
 
     /**
